@@ -65,8 +65,9 @@ ggplot2::ggplot(data=FactCockleSize, #what data table to use
 FactCockleSize |> dplyr::filter(thickness_mm>500)
 
 FactCockleSize <- readr::read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSpormjGiM4uWMTIZYm9Upt5j1Ige_Wu9CrhGGdvjXwxmHP2R6S7JDyEmiGTn3fXihl5s5yBn_sdo8h/pub?gid=1538766002&single=true&output=csv") |> 
-  dplyr::filter(CockleObs_ID!=1531, CockleObs_ID!=469)
-
+  dplyr::filter(CockleObs_ID!=1531, CockleObs_ID!=469) |>
+  dplyr::mutate(year = factor(year)) # make year a factor
+print(FactCockleSize)
 #plot the data
 ggplot2::ggplot(data=FactCockleSize, #what data table to use
                 mapping=aes(x=length_mm, y=thickness_mm)) + #what is on the axes
@@ -77,38 +78,55 @@ FactCockleSize |> dplyr::filter (thickness_mm>10 & length_mm<5)
 # also remove 469 above
 ```
 
-```{r}
-#tryout
-
-# Create the scatter plot with a regression line
-ggplot(data = FactCockleSize, aes(x = thickness_mm, y = length_mm, color = factor(year))) +
-  geom_point(size = 3) +  # Scatter plot points
-  geom_smooth(method = "lm", se = FALSE, color = "black") +  # Regression line
-  labs(title = "Relation between Cockle Thickness and Length",
-       x = "Thickness (mm)",
-       y = "Length (mm)",
-       color = "Year") +
-  theme_minimal()  # Clean theme
-
-
-
-
-```
-
 Further explore the plot with a regression line through all the data
 
 ```{r}
+#plot the data with regression line
+ggplot2::ggplot(data=FactCockleSize, #what data table to use
+                mapping=aes(x=length_mm, y=thickness_mm)) + #what is on the axes
+              geom_point() + 
+              geom_smooth (method = "lm", se = FALSE, color = "purple")
+
+# calculate a linear regression
+model_lm <- lm(thickness_mm~length_mm, data=FactCockleSize)
+summary(model_lm)
+#equation: thickness_mm= -0.353 + 0.699*length_mm
+# a cockle of length 20 mm has a predicted width of :
+-0.353 + 0.699*20
+# thsi regression is significant, R2=0.90, P<0.001 (***)
 ```
 
 Make same plot but showing a separate regression line per year
 
 ```{r}
 # color the points by year, but plot one regression line
+ggplot2::ggplot(data=FactCockleSize, #what data table to use
+                mapping=aes(x=length_mm, y=thickness_mm)) + #what is on the axes
+            geom_point(mapping=aes(col=year)) + 
+            geom_smooth (method = "lm", se=FALSE, color="purple")
+            
 ```
 
 Make a panel plot where with each year is shown as a separate graph
 
 ```{r}
+# group by year with their own regression line
+data=FactCockleSize |> 
+  dplyr::filter(year %in% c(2014,2015,2017,2018,2020,2021)) |>
+  dplyr::mutate(year=factor(year)) |>
+    ggplot2::ggplot(mapping=aes(x=length_mm, y=thickness_mm)) +#what is on the axes
+            geom_point(mapping=aes(col=year)) + 
+            geom_smooth (method = "lm") +
+            facet_wrap(~year)
+
+drop_na(FactCockleSize) |>
+  ggplot2::ggplot(mapping=aes(x=length_mm, y=thickness_mm))+
+    geom_point(aes(col=year), size=2) +
+    xlab("cockle lenght(mm)") +
+    ylab("cockle width (mm)") + 
+    geom_smooth(method='lm') +
+    facet_wrap(~year)
+
 ```
 
 We conclude from this that: \* there were two important outliers in the
