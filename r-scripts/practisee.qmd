@@ -1,0 +1,53 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+tools --> install packages --> renv
+don't forget --> renv::init()
+
+
+
+# Practise with data
+
+### Loading dataframe
+
+```{r}
+#| label: load-libraries
+#| output: false  
+library(tidyverse) # load the tidyverse libraries, including readr
+```
+
+```{r}
+#| label: read-google-sheets-data
+
+FactVegComp_link<-"https://docs.google.com/spreadsheets/d/12q4qQoFdv5B7Xy9KAPwjgm8aSr1BUEXgHB6TuvTEJNs/pub?gid=1290177623&single=true&output=csv"
+FactVegComp<-read_csv(FactVegComp_link)
+```
+
+### Making some graphs
+
+```{r}
+ggplot(FactVegComp, aes(x= factor(TransectPoint_ID), y =CoverPerc, fill= Species_ID)) +
+  geom_bar(stat = "summary", fun="sum") +
+  scale_fill_discrete(labels = c("fes rub" = "Plantago Maritima", "pla mar" = "Puccinellia maritima", "puc mar" = "Festuca rubra")) +
+  theme_minimal() +
+  labs(title = "Cover Percentage by Transect Point and species",
+       x = "Transect Point",
+       y = "Cover %",
+       fill = "Species")
+```
+
+```{r}
+install.packages("ggplot2")
+library(ggplot2)
+
+# Create the bar plot
+ggplot(summary_data, aes(x = TransectPoint_ID, y = CoverPerc, fill = Species_ID)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Cover by Species at Each Transect Point",
+       x = "Transect Point",
+       y = "Total Cover") +
+  theme_minimal()
+
+```
