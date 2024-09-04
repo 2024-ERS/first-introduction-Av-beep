@@ -63,29 +63,57 @@ print(cdat2017)
 
 # always put the longest file first!!!!
 combidat <- dplyr::left_join(elevdat2017, cdat2017, by="TransectPoint_ID") |>
-  dplyr::mutate(n_obs=tidyr::replace_na(n_obs, 0))
+  dplyr::mutate(n_obs=tidyr::replace_na(n_obs, 0)) 
+  
+
 combidat
 
 # show in a plot how cockle density changes with elevation
 combidat |>
   ggplot(aes(x=elevation_m, y=n_obs))+
   geom_point() +
-  geom_smooth(method="loess")
-
-
-# fit a linear regression
+  geom_smooth(method="lm")
 
 # predicted at 0.5 m (x)
 # y = b0 + b1x   (b0 is intercept and b1 is the slope, x is elevation, y is no cockles
-
 # show this model as a line in ggplot, with the confidence interval
-
 # fit a better model, using a loess smoother
 # show this model in ggplot
+combidat |>
+  ggplot(aes(x=elevation_m, y=n_obs))+
+  geom_point() +
+  geom_smooth(method="loess")
+
+
 
 ##### plot  how the size (as mean length) of cockles changes with  elevation along the transect
 # omit the observations where length is NA (because no cockles were measures)
+clean_data <- combidat %>%
+  drop_na(avg_l)
+clean_data
+
+clean_data |>
+  ggplot(aes(x=elevation_m, y=avg_l))+
+  geom_point()+
+  geom_line ()
+
+
 # fit a quadratic model (second-order polynomial)
+quadratic_model <- lm(avg_l ~ poly(elevation_m, 2), data = clean_data)
+summary(quadratic_model)
+
 # show for each point also the standard errors
 # add appropriate labels for the x and y axis 
+clean_data |>
+  ggplot(aes(x=elevation_m, y=avg_l))+
+  geom_point()+
+  geom_errorbar(aes (ymin = avg_l - se_l,
+                ymax = avg_l + se_l), width =0.2) +
+  geom_smooth(method = "lm", formula = y~poly(x,2), se=TRUE, color="blue") +
+  # adding labels
+xlab("Elevation (m)") +  # X-axis label
+  ylab("Average length (mm)") +   # Y-axis label
+  ggtitle("Quadratic Fit of Size vs. Elevation with Standard Errors") +  # Plot title
+  theme_minimal()
+
 
