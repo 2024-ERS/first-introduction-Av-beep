@@ -81,7 +81,7 @@ orchdat3$pred2<-predict(m2)
 p2 + geom_line(data=orchdat3, aes(y=pred2), col="red", linewidth=1.2)
   
 # test if the new model m2   significantly explains more variation than the first model m1
-
+anova(m1,m2) #Lower RSS for model 2, so better fit, significantly
   
 # predict the orchestia abundance at 1.5 m elevation
 
@@ -89,25 +89,36 @@ p2 + geom_line(data=orchdat3, aes(y=pred2), col="red", linewidth=1.2)
 # add year (as a factor) to the model and fit it as model m3
 # so y = b0 + b1x1 + b2x1^2 +b3x2 
 # test if it is significant, and better than the previous one
-
-  
+m3 <- lm(CountSum~elevation_m+I(elevation_m^2)+factor(year), 
+         data=orchdat3)
+m3
+summary(m3)
+anova(m3)
 #add the linear model to the plot
 # calculate the predicted value of m2 for every observation, add to the dataset as a variable as pred2
 # add the new predicted line to the previous plot p2, store as object p3 and show it
-
+orchdat3$pred3 <- predict(m3)
+p1 + geom_line(data=orchdat3, aes(y=pred3, col=factor(year)), linewidth=1.2)
   
 # does this significantly explain more variation than the model without year?
-
+anova(m3,m2)
   
 # yes this is a better model
 
 # include the interaction between elevation and year (as a factor) in the model 
+m4 <- lm(CountSum~elevation_m+I(elevation_m^2)+factor(year) + elevation_m*factor(year), 
+         data=orchdat3)
+
+orchdat3$pred4 <- predict(m4)
+p1 + geom_line(data=orchdat3, aes(y=pred4, col=factor(year)), linewidth=1.2)
+
 
   
 #add the linear model to the plot
 # calculate the predicted value of m2 for every observation, add to the dataset as a variable as pred2
 # add the new predicted line to the previous plot p2, store as object p3 and show it
 
+anova(m4,m3) # the RSS goes down, but not significantly, so m3 is preferred
   
 #### m3 is the preferred model in this case (outcome of model selection)
 
