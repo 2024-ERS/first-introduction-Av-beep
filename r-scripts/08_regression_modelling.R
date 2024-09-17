@@ -190,6 +190,25 @@ p1 + geom_line(data=orchdat3, aes(y=pred6), linewidth=1.2)
 
 # add the interaction to the model: elevation + elevation ^2 + year + elevation*year
 # now test and show  the effect of both elevation + year
+m7 <-glm(CountSum~elevation_m + I(elevation_m^2) + factor(year), 
+         family = poisson(log),
+         data = orchdat3)
+orchdat3$pred7 <- predict(m7, type="response")
+p1 + geom_line(data=orchdat3, aes(y=pred7), linewidth=1.2)
+
+anova(m7,m6, test="Chisq") #looking at dev., model m7 is better than m6
+
+m8 <-glm(CountSum~elevation_m + I(elevation_m^2) + factor(year) + elevation_m*factor(year), 
+         family = poisson(log),
+         data = orchdat3)
+orchdat3$pred8 <- predict(m8, type="response")
+p1 + geom_line(data=orchdat3, aes(y=pred8), linewidth=1.2)
+
+anova(m8,m7, test="Chisq")
+
+
+
+
 
 
 #add the  model to the plot
