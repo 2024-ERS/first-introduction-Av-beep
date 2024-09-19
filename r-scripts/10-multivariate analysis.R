@@ -154,7 +154,8 @@ plot(ef_dca, add=T)
 ##### add contour surfaces to the dca ordination for the relevant abiotic variables
 vegan::ordisurf(dca, envdat$clay_cm, add=T, col="green")
 vegan::ordisurf(dca, envdat$elevation_m, add=T, col="brown")
-vegan::ordisurf(dca, vegdat$PlantMar, add=T, col="purple")
+# add a species contour
+vegan::ordisurf(dca, vegdat$FestuRub, add=T, col="purple")
 
 ##### make the same plot but using a nmds
 ##### fit the environmental factors to the nmds ordination surface
@@ -169,42 +170,77 @@ vegan::ordisurf(dca, vegdat$PlantMar, add=T, col="purple")
 ##### compare an unconstrainted (DCA) and constrained (CCA) ordination
 # did you miss important environmental factors?
 # show the results of the detrended correspondence analysis
-
+dca
 # the eigenvalues represent the variation explained by each axis
-
+names(envdat)
+cca1 <-vegan::cca(vegdat~elevation_m+DistGulley_m+floodprob+redox5+redox10+clay_cm, data=envdat)
+summary(cca1)
 # kick out variables that are least significant - simplify the model
+#check what is significant
+anova(cca1, by="axis")
+anova(cca1, by="margin")
 
+# redo with only the important uncorrelated variables
+cca2 <-vegan::cca(vegdat~floodprob+DistGulley_m, data=envdat)
+summary(cca2)
+
+anova(cca2, by="axis")
+anova(cca2, by="margin")
 
 # add the environmental factors to the cca ordination plot
+vegan::ordiplot(cca2, display = "sites", cex=1, type="text",
+                xlab="CCA1 (21%)", ylab="CCA2 (14%)")
+vegan::orditorp(cca2, display= "species", priority = SpecTotCov, 
+                col="red", pcol="red", pch="+", cex=1.1)
 
-
+vegan::ordisurf(cca2, envdat$floodprob, add=T, col="blue")
+vegan::ordisurf(cca2, envdat$DistGulley_m, add=T, col="green")
 # test if the variables and axes (margins) are significant
 
-# You have measured the right things!
+
 # for example - test this if you would have only measured clay thickness
 
 # yes, clay thickness significantly affects vegetation composition
 
 ##### cluster analysis (classification) of  communities
 # first calculate a dissimilarity matrix, using Bray-Curtis dissimilarity
+d <- vegan::vegdist(vegdat, method="bray")
 
-
- # show the dissimilarity matrix (1= completely different, 0= exactly the same)
-
+# show the dissimilarity matrix (1= completely different, 0= exactly the same)
+d
 
 # now cluster the sites based on similarity in species composition 
 # using average linkage as the sorting algorithm
+cavg <- hclust(d, method="average")
+plot(cavg)
 
-
-# back to  clustering based on species composition - show the dendrogram and cut in in 4 communities
-
-
+#  show the dendrogram and cut in in 4 communities
+rect.hclust(cavg, 4)
+c4<-cutree(cavg, 4)
+c4
 ##### add the clustering of plots to your cca ordination
+vegan::ordiplot(cca1, display = "sites", cex=1, type="text",
+                xlab="CCA1 (21%)", ylab="CCA2 (14%)")
+vegan::orditorp(cca1, display= "species", priority = SpecTotCov, 
+                col="red", pcol="red", pch="+", cex=1.1)
+vegan::ordihull(cca1, c4, lty=2, col="darkgreen", lwd=2)
 
 #add the vegetation type to the environmental data
+envdat2 <- envdat |>
+  dplyr::mutate(vegtype=factor(c4))
+levels(envdat2$vegtype)<- c("Dune", "High Saltmarsh", "Low Saltmarsh", "Pioneer zone")
 
 # test if DistGulley_m is different between the vegetation types
+p1 <- envdat2 |>
+  ggplot(aes(x=vegtype, y=floodprob))+
+  geom_boxplot()+
+  xlab(NULL)
 
+p2 <- envdat2 |>
+  ggplot(aes(x=vegtype, y=clay_cm))+
+  geom_boxplot()
+
+p1+p2+patchwork::plot_layout(ncol=1)
 # what do you write: 
 # the vegetation types were significantly different in distance to gulley (F3,18=21.36, P<0.001)
 # * P<0.05, ** P<0.01, *** P<0.001
