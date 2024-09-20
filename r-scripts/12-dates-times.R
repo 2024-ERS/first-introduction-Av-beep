@@ -90,17 +90,49 @@ plot(monthly_temps_decomp)
 
 
 # average temperature of the coldest month per meteorological year
+dat_metyear_dec <- dat_month |>
+  dplyr::group_by(metyear_dec) |>
+  dplyr::summarise(minmonth=min(avgtemp_mo_oC, na.rm=T))
+dat_metyear_dec
 
   # note that 2010 and 2011 were the last winters with a (on average) sub-zero month, 
 # potentially relevant for cockle recruitment (crabs stay on mudflats eating spatfall)
+dat_metyear_dec |>
+  ggplot(aes(x=metyear_dec, y=minmonth)) +
+  geom_line(linewidth=.7) +
+  geom_point(size=3)
+
 
 # Hellmann index (sum of all below-zero daily average temperatures from 1 November of previous year until 31 march)
 # see https://nl.wikipedia.org/wiki/Koudegetal
+dat_Hellman <- dat |>
+  dplyr::filter(month %in% c(11,12,1,2,3), TG<0) |>
+  dplyr::group_by(metyear_nov) |>
+  summarise(Hellman=sum(TG, na.rm=T))
+tail(dat_Hellman, 10)
 
+dat_Hellman |>
+  ggplot(aes(x=metyear_nov, y=Hellman)) +
+  geom_point()+
+  geom_line()
 # 1997 was the last "Elfstedentocht"
 # 2014 -2024 (our transect study) is characterized by only warm winters
 
 # Warmth index
 library(quantreg)
 # see for calculation https://www.knmi.nl/nederland-nu/klimatologie/lijsten/warmtegetallen
+dat_WarmthIndex <- dat |>
+  dplyr::filter(month %in% c(4:8), TG>18) |>
+  dplyr::group_by(year) |>
+  dplyr::summarise(WarmthIndex=sum(TG, na.rm=T))
 
+# add 10, 50 and 90 quantiles to the graphs with different colours for every line
+dat_WarmthIndex |>
+  ggplot(aes(x=year, y=WarmthIndex)) +
+  geom_point() +
+  #geom_line() +
+  geom_smooth(method="lm", col="turquoise") +
+  ggtitle ("Warmth Index per year") +
+  theme(text= element_text(size =12)) +
+  geom_quantile(quantiles = c(0.1, 0.5, 0.9), col = "purple")
+  
